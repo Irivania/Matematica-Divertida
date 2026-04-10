@@ -18,11 +18,22 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   late GameEngine _engine;
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _engine = widget.engine;
+    _engine.onTick = () {
+      if (mounted) setState(() {});
+    };
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 
   void _submit() {
@@ -32,6 +43,7 @@ class _GameScreenState extends State<GameScreen> {
         _engine.submitAnswer(value);
         _controller.clear();
       });
+      _focusNode.requestFocus();
     }
   }
 
@@ -41,38 +53,74 @@ class _GameScreenState extends State<GameScreen> {
     final question = _engine.currentQuestion;
     return Scaffold(
       appBar: AppBar(title: Text('Fase ${state.phase}')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TimerWidget(timeLeft: state.timeLeft),
-            const SizedBox(height: 16),
-            ScoreBoard(correct: state.correct, wrong: state.wrong),
-            const SizedBox(height: 32),
-            Text(
-              'Pergunta ${state.question}/10',
-              style: Theme.of(context).textTheme.titleLarge,
-              textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TimerWidget(timeLeft: state.timeLeft),
+                const SizedBox(height: 16),
+                ScoreBoard(correct: state.correct, wrong: state.wrong),
+                const SizedBox(height: 32),
+                Text(
+                  'Pergunta ${state.question}/10',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  question.statement,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                AnswerInputField(
+                  controller: _controller,
+                  onSubmitted: (_) => _submit(),
+                  focusNode: _focusNode,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _submit,
+                  child: const Text('Responder'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              question.statement,
-              style: Theme.of(context).textTheme.headlineMedium,
-              textAlign: TextAlign.center,
+          ),
+          if (state.phaseStatus == GamePhase.completed)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Card(
+                    elevation: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Parabéns! Fase ${state.phase} concluída',
+                              style: Theme.of(context).textTheme.headlineSmall),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _engine.goToNextPhase();
+                              });
+                            },
+                            child: const Text('Próxima fase'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
-            AnswerInputField(
-              controller: _controller,
-              onSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submit,
-              child: const Text('Responder'),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

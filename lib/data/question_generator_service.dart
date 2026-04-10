@@ -13,45 +13,34 @@ import 'datasources/question_datasource.dart';
 class QuestionGeneratorService implements QuestionDataSource {
   @override
   Level generateLevel(int phase, GameMode mode) {
+    // Gera 10 perguntas únicas, simples, inteiras, sem repetições excessivas
     final questions = <Question>[];
-    for (int i = 0; i < GameConstants.questionsPerPhase; i++) {
-      questions.add(_generateQuestion(phase, mode));
+    final seen = <String>{};
+    int tentativas = 0;
+    while (questions.length < GameConstants.questionsPerPhase && tentativas < 100) {
+      final q = _generateEasyMathQuestion(phase);
+      // Evita perguntas repetidas
+      if (!seen.contains(q.statement)) {
+        questions.add(q);
+        seen.add(q.statement);
+      }
+      tentativas++;
     }
     return Level(number: phase, questions: questions);
   }
 
-  Question _generateQuestion(int phase, GameMode mode) {
-    // Define operações possíveis por modo
-    final operations = mode == GameMode.child
-        ? [
-            MathOperation.addition,
-            MathOperation.subtraction,
-            MathOperation.multiplication,
-            MathOperation.division,
-          ]
-        : [
-            MathOperation.addition,
-            MathOperation.subtraction,
-            MathOperation.multiplication,
-            MathOperation.division,
-            if (phase > 5) MathOperation.percentage,
-            if (phase > 10) MathOperation.squareRoot,
-            if (phase > 15) MathOperation.power,
-          ];
-    final op = operations[MathHelpers.randomInRange(0, operations.length - 1)];
-    // Define faixa de números conforme fase
-    final min = mode == GameMode.child
-        ? GameConstants.minNumberChild + (phase - 1)
-        : GameConstants.minNumberAdult + (phase * 2);
-    final max = mode == GameMode.child
-        ? GameConstants.maxNumberChild + (phase * 2)
-        : GameConstants.maxNumberAdult + (phase * 10);
-    // Gera números
-    final a = MathHelpers.randomInRange(min, max);
-    final b = MathHelpers.randomInRange(min, max);
-    // Monta pergunta e resposta
+  /// Gera perguntas de matemática básica, inteiras, simples e rápidas
+  Question _generateEasyMathQuestion(int phase) {
+    // Aumenta levemente a faixa conforme a fase
+    final min = 1 + (phase - 1);
+    final max = 10 + (phase - 1) * 2;
+    final ops = [MathOperation.addition, MathOperation.subtraction, MathOperation.multiplication, MathOperation.division];
+    final op = ops[MathHelpers.randomInRange(0, ops.length - 1)];
+    int a, b;
     switch (op) {
       case MathOperation.addition:
+        a = MathHelpers.randomInRange(min, max);
+        b = MathHelpers.randomInRange(min, max);
         return Question(
           statement: '$a + $b = ?',
           answer: a + b,
@@ -59,6 +48,8 @@ class QuestionGeneratorService implements QuestionDataSource {
           options: _generateOptions(a + b),
         );
       case MathOperation.subtraction:
+        a = MathHelpers.randomInRange(min, max);
+        b = MathHelpers.randomInRange(min, a); // Garante resultado >= 0
         return Question(
           statement: '$a - $b = ?',
           answer: a - b,
@@ -66,6 +57,8 @@ class QuestionGeneratorService implements QuestionDataSource {
           options: _generateOptions(a - b),
         );
       case MathOperation.multiplication:
+        a = MathHelpers.randomInRange(min, max > 10 ? 10 : max); // Mantém multiplicação simples
+        b = MathHelpers.randomInRange(min, max > 10 ? 10 : max);
         return Question(
           statement: '$a × $b = ?',
           answer: a * b,
@@ -73,36 +66,18 @@ class QuestionGeneratorService implements QuestionDataSource {
           options: _generateOptions(a * b),
         );
       case MathOperation.division:
-        final divisor = b == 0 ? 1 : b;
+        b = MathHelpers.randomInRange(min, max > 10 ? 10 : max);
+        b = b == 0 ? 1 : b;
+        a = b * MathHelpers.randomInRange(min, max > 10 ? 10 : max); // Garante divisão exata
         return Question(
-          statement: '${a * divisor} ÷ $divisor = ?',
-          answer: a,
+          statement: '$a ÷ $b = ?',
+          answer: a ~/ b,
           operation: op,
-          options: _generateOptions(a),
+          options: _generateOptions(a ~/ b),
         );
-      case MathOperation.percentage:
-        return Question(
-          statement: 'Qual é ${(a % 100) + 1}% de $b?',
-          answer: ((a % 100) + 1) * b / 100,
-          operation: op,
-          options: _generateOptions(((a % 100) + 1) * b / 100),
-        );
-      case MathOperation.squareRoot:
-        final n = a * a;
-        return Question(
-          statement: '√$n = ?',
-          answer: a,
-          operation: op,
-          options: _generateOptions(a),
-        );
-      case MathOperation.power:
-        final exp = (b % 3) + 2;
-        return Question(
-          statement: '$a ^ $exp = ?',
-          answer: num.parse((pow(a.toDouble(), exp)).toStringAsFixed(2)),
-          operation: op,
-          options: _generateOptions(num.parse((pow(a.toDouble(), exp)).toStringAsFixed(2))),
-        );
+      default:
+        // Nunca deve cair aqui
+        return Question(statement: 'Erro', answer: 0, operation: op, options: [0]);
     }
   }
 

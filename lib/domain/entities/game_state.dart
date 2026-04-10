@@ -9,7 +9,7 @@ class GameState {
   final int wrong;
   final Duration timeLeft;
   final GameMode mode;
-  final GameStatus status;
+  final GamePhase phaseStatus;
 
   const GameState({
     required this.phase,
@@ -18,7 +18,7 @@ class GameState {
     required this.wrong,
     required this.timeLeft,
     required this.mode,
-    required this.status,
+    required this.phaseStatus,
   });
 
   /// Cria uma cópia modificada (imutabilidade)
@@ -29,7 +29,7 @@ class GameState {
     int? wrong,
     Duration? timeLeft,
     GameMode? mode,
-    GameStatus? status,
+    GamePhase? phaseStatus,
   }) {
     return GameState(
       phase: phase ?? this.phase,
@@ -38,7 +38,7 @@ class GameState {
       wrong: wrong ?? this.wrong,
       timeLeft: timeLeft ?? this.timeLeft,
       mode: mode ?? this.mode,
-      status: status ?? this.status,
+      phaseStatus: phaseStatus ?? this.phaseStatus,
     );
   }
 }

@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 class AnswerInputField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String>? onSubmitted;
-  const AnswerInputField({required this.controller, this.onSubmitted, super.key});
+  final FocusNode? focusNode;
+  const AnswerInputField({required this.controller, this.onSubmitted, this.focusNode, super.key});
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: TextInputType.number,
       decoration: const InputDecoration(
         labelText: 'Sua resposta',
