@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Tela de perfil do adulto (placeholder)
 class AdultProfileScreen extends StatelessWidget {
   const AdultProfileScreen({super.key});
 
@@ -9,7 +8,10 @@ class AdultProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Perfil do Adulto')),
       body: const Center(
-        child: Text('Tela de perfil do adulto'),
+        child: CircleAvatar(
+          radius: 60,
+          backgroundImage: AssetImage('assets/images/adult_avatar.png'),
+        ),
       ),
     );
   }
