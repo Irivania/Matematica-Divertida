@@ -12,6 +12,7 @@ import '../../data/level_progression_service.dart';
 import '../../data/timer_service.dart';
 import '../../data/game_repository_impl.dart';
 import '../repositories/game_repository.dart';
+import '../../core/constants/game_constants.dart';
 
 class GameEngine {
   late GameState _state;
@@ -119,27 +120,31 @@ class GameEngine {
     endAndRestartGame(GamePhase.timeout);
   }
 
-  /// Encerra a partida e reinicia o jogo do zero
+  /// Encerra a partida e reinicia apenas a fase atual
   void endAndRestartGame(GamePhase reason) {
     _state = _state.copyWith(phaseStatus: reason);
     _timer.stop();
-    // Reinicia o jogo após breve delay para feedback visual
+    // Reinicia a fase atual após breve delay para feedback visual
     Future.delayed(const Duration(seconds: 1), () {
-      startGame(_state.mode);
+      resetPhase();
       if (onTick != null) onTick!();
     });
   }
 
-  /// Reseta a fase atual (após erro ou timeout)
+  /// Reseta a fase atual (após erro ou timeout), mantendo o número da fase
   void resetPhase() {
-    _state = _state.copyWith(
+    final currentPhase = _state.phase;
+    final currentMode = _state.mode;
+    _state = GameState(
+      phase: currentPhase,
       question: 1,
       correct: 0,
       wrong: 0,
-      phaseStatus: GamePhase.playing,
       timeLeft: GameConstants.phaseTime,
+      mode: currentMode,
+      phaseStatus: GamePhase.playing,
     );
-    _currentLevel = _questionGen.generateLevel(_state.phase, _state.mode);
+    _currentLevel = _questionGen.generateLevel(currentPhase, currentMode);
     _timer.reset();
     _timer.start();
   }

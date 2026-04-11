@@ -1,31 +1,30 @@
-/// Tela inicial do jogo: seleção de modo (criança/adulto).
 import 'package:flutter/material.dart';
 import '../../domain/entities/game_mode.dart';
+import 'dart:math';
+import 'package:matematica_divertida/presentation/screens/_animated_gradient_button.dart';
+import 'package:matematica_divertida/presentation/screens/_animated_bg_painter.dart';
 
-class HomeScreen extends StatelessWidget {
+enum _ModeType { child, adult }
+
+class HomeScreen extends StatefulWidget {
   final void Function(GameMode) onModeSelected;
   const HomeScreen({required this.onModeSelected, super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Matemática Divertida')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () => onModeSelected(GameMode.child),
-              child: const Text('Modo Criança'),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => onModeSelected(GameMode.adult),
-              child: const Text('Modo Adulto'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<HomeScreen> createState() => _HomeScreenState();
 }
+
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  _ModeType? selectedMode;
+  bool showContent = false;
+  late final AnimationController _bgAnimController;
+  late final Animation<double> _bgAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() => showContent = true);
+    });
+  }
+

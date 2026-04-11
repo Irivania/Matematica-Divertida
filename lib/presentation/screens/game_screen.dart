@@ -7,9 +7,12 @@ import '../widgets/answer_input_field.dart';
 import '../widgets/timer_widget.dart';
 import '../widgets/score_board.dart';
 
+typedef GameExitCallback = void Function();
+
 class GameScreen extends StatefulWidget {
   final GameEngine engine;
-  const GameScreen({required this.engine, super.key});
+  final GameExitCallback? onExit;
+  const GameScreen({required this.engine, this.onExit, super.key});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -27,6 +30,10 @@ class _GameScreenState extends State<GameScreen> {
     _engine.onTick = () {
       if (mounted) setState(() {});
     };
+    // Solicita foco automático ao abrir a tela
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
   }
 
   @override
@@ -52,7 +59,16 @@ class _GameScreenState extends State<GameScreen> {
     final state = _engine.state;
     final question = _engine.currentQuestion;
     return Scaffold(
-      appBar: AppBar(title: Text('Fase ${state.phase}')),
+      appBar: AppBar(
+        title: Text('Fase ${state.phase}'),
+        leading: widget.onExit != null
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                tooltip: 'Voltar para seleção de modo',
+                onPressed: widget.onExit,
+              )
+            : null,
+      ),
       body: Stack(
         children: [
           Padding(

@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'domain/engine/game_engine.dart';
 import 'domain/entities/game_mode.dart';
 import 'domain/entities/game_status.dart';
-import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/mode_selection_page.dart';
 import 'presentation/screens/game_screen.dart';
 import 'presentation/screens/result_screen.dart';
+import 'presentation/screens/child_profile.dart';
+import 'presentation/screens/adult_profile.dart';
 
 void main() {
   runApp(const MathGameApp());
@@ -45,22 +47,24 @@ class _MathGameAppState extends State<MathGameApp> {
 
   @override
   Widget build(BuildContext context) {
-    Widget screen;
-    if (_selectedMode == null) {
-      screen = HomeScreen(onModeSelected: _startGame);
-    } else if (_engine.state.status == GameStatus.success || _engine.state.status == GameStatus.fail) {
-      screen = ResultScreen(
-        correct: _engine.state.correct,
-        wrong: _engine.state.wrong,
-        onRestart: _restart,
-      );
-    } else {
-      screen = GameScreen(engine: _engine);
-    }
     return MaterialApp(
       title: 'Matemática Divertida',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: screen,
+      home: ModeSelectionPage(
+        onModeSelected: (modeType) {
+          final gameMode = modeType == ModeType.child ? GameMode.child : GameMode.adult;
+          _engine.startGame(gameMode);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GameScreen(
+                engine: _engine,
+                onExit: _restart,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
